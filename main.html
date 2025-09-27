@@ -13,11 +13,13 @@
 <body>
   <h1>Beweeg je iPhone om de toonhoogte te veranderen</h1>
   <button id="startBtn">Start geluid</button>
+  <button id="stopBtn" disabled>Stop geluid</button>
   <p>Frequentie: <span id="freq">-</span> Hz</p>
   <p>Tip: Houd je iPhone horizontaal en beweeg hem langs de X-as (links/rechts).</p>
   <script>
     let audioCtx, oscillator;
     let started = false;
+    let motionHandler = null;
 
     const baseFreq = 440; // A4
     const maxDelta = 300; // maximaal +/- 300Hz variatie
@@ -34,6 +36,15 @@
       startAudio();
       startMotion();
       document.getElementById('startBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+    };
+
+    document.getElementById('stopBtn').onclick = () => {
+      stopAudio();
+      stopMotion();
+      document.getElementById('stopBtn').disabled = true;
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('freq').textContent = '-';
     };
 
     function startAudio() {
@@ -48,16 +59,37 @@
       started = true;
     }
 
+    function stopAudio() {
+      if (oscillator) {
+        oscillator.stop();
+        oscillator.disconnect();
+        oscillator = null;
+      }
+      if (audioCtx) {
+        audioCtx.close();
+        audioCtx = null;
+      }
+      started = false;
+    }
+
     function startMotion() {
-      window.addEventListener('devicemotion', function(event) {
+      motionHandler = function(event) {
         if (!started) return;
         let x = event.accelerationIncludingGravity.x || 0;
         // Clamp x tussen -1.0 en 1.0 voor veilige variatie
         x = Math.max(-1, Math.min(1, x));
         let freq = baseFreq + Math.round(x * maxDelta);
-        oscillator.frequency.value = freq;
+        if (oscillator) oscillator.frequency.value = freq;
         document.getElementById('freq').textContent = freq;
-      });
+      };
+      window.addEventListener('devicemotion', motionHandler);
+    }
+
+    function stopMotion() {
+      if (motionHandler) {
+        window.removeEventListener('devicemotion', motionHandler);
+        motionHandler = null;
+      }
     }
   </script>
 </body>
