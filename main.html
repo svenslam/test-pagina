@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Bewegingssensor Toonhoogte Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2em; }
+    #freq { font-size: 2em; }
+    button { font-size: 1.2em; padding: 0.5em 1em; }
+  </style>
+</head>
+<body>
+  <h1>Beweeg je iPhone om de toonhoogte te veranderen</h1>
+  <button id="startBtn">Start geluid</button>
+  <p>Frequentie: <span id="freq">-</span> Hz</p>
+  <p>Tip: Houd je iPhone horizontaal en beweeg hem langs de X-as (links/rechts).</p>
+  <script>
+    let audioCtx, oscillator;
+    let started = false;
+
+    const baseFreq = 440; // A4
+    const maxDelta = 300; // maximaal +/- 300Hz variatie
+
+    document.getElementById('startBtn').onclick = async () => {
+      if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        // iOS 13+ permission
+        const perm = await DeviceMotionEvent.requestPermission();
+        if (perm !== 'granted') {
+          alert('Toegang tot bewegingssensor geweigerd.');
+          return;
+        }
+      }
+      startAudio();
+      startMotion();
+      document.getElementById('startBtn').disabled = true;
+    };
+
+    function startAudio() {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      oscillator = audioCtx.createOscillator();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = baseFreq;
+      let gainNode = audioCtx.createGain();
+      gainNode.gain.value = 0.2;
+      oscillator.connect(gainNode).connect(audioCtx.destination);
+      oscillator.start();
+      started = true;
+    }
+
+    function startMotion() {
+      window.addEventListener('devicemotion', function(event) {
+        if (!started) return;
+        let x = event.accelerationIncludingGravity.x || 0;
+        // Clamp x tussen -1.0 en 1.0 voor veilige variatie
+        x = Math.max(-1, Math.min(1, x));
+        let freq = baseFreq + Math.round(x * maxDelta);
+        oscillator.frequency.value = freq;
+        document.getElementById('freq').textContent = freq;
+      });
+    }
+  </script>
+</body>
+</html>
