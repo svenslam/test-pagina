@@ -1,96 +1,471 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <title>Bewegingssensor Toonhoogte Demo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 2em; }
-    #freq { font-size: 2em; }
-    button { font-size: 1.2em; padding: 0.5em 1em; }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>G-kracht + Alarm demo</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;background:#f6f8fb}
+body{margin:0;padding:16px}
+h1{margin:0 0 6px;font-size:20px}
+p{margin:6px 0;color:#333}
+.controls, .panel{background:white;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(20,30,50,0.06);margin:10px 0}
+button{padding:10px 12px;margin-right:8px;border-radius:8px;border:1px solid #d0d6e0;background:#fff;cursor:pointer}
+button.primary{background:#2563eb;color:white;border:none}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+canvas{background:#0b1220;border-radius:8px;display:block;width:100%;height:220px}
+label{display:block;font-size:13px;margin-top:8px;color:#444}
+.big{font-size:18px;font-weight:700}
+.status{font-size:13px;color:#666;margin-left:8px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.key{padding:14px;font-size:20px;border-radius:8px;background:#efeff5;border:1px solid #d7d7df;text-align:center;cursor:pointer}
+.codeDisplay{font-size:22px;letter-spacing:6px;text-align:center;padding:10px;background:#f4f6fb;border-radius:8px}
+.danger{color:#b91c1c}
+.small{font-size:13px;color:#666}
+footer{font-size:13px;color:#666;margin-top:12px}
+</style>
 </head>
 <body>
-  <h1>Beweeg je iPhone om de toonhoogte te veranderen</h1>
-  <button id="startBtn">Start geluid</button>
-  <button id="stopBtn" disabled>Stop geluid</button>
-  <p>Frequentie: <span id="freq">-</span> Hz</p>
-  <p>Tip: Houd je iPhone horizontaal en beweeg hem langs de X-as (links/rechts).</p>
-  <script>
-    let audioCtx, oscillator;
-    let started = false;
-    let motionHandler = null;
+<h1>G-kracht meter & Alarmsysteem</h1>
+<p>Laad deze pagina via HTTPS (bv. GitHub Pages). Druk eerst op <strong>Toestemming vragen</strong> en kies daarna welke functionaliteit je wilt activeren.</p>
 
-    const baseFreq = 440; // A4
-    const maxDelta = 300; // maximaal +/- 300Hz variatie
+<div class="controls">
+<div class="row">
+<button id="requestPermission" class="primary">Toestemming vragen</button>
+<div class="status" id="permStatus">Toestemming niet gevraagd</div>
+</div>
 
-    document.getElementById('startBtn').onclick = async () => {
-      if (typeof DeviceMotionEvent.requestPermission === 'function') {
-        // iOS 13+ permission
-        const perm = await DeviceMotionEvent.requestPermission();
-        if (perm !== 'granted') {
-          alert('Toegang tot bewegingssensor geweigerd.');
-          return;
-        }
-      }
-      startAudio();
-      startMotion();
-      document.getElementById('startBtn').disabled = true;
-      document.getElementById('stopBtn').disabled = false;
-    };
+<label>Kies functionaliteit (meerdere mogelijk):</label>
+<div class="row" style="margin-top:8px">
+<label><input type="checkbox" id="enableG"> G-kracht meter</label>
+<label><input type="checkbox" id="enableAlarm"> Alarmsysteem (locatieverplaatsing)</label>
+<button id="startSelected" class="primary">Start geselecteerd</button>
+</div>
+</div>
 
-    document.getElementById('stopBtn').onclick = () => {
-      stopAudio();
-      stopMotion();
-      document.getElementById('stopBtn').disabled = true;
-      document.getElementById('startBtn').disabled = false;
-      document.getElementById('freq').textContent = '-';
-    };
+<!-- G-kracht paneel -->
+<div id="gPanel" class="panel" style="display:none">
+<div class="row"><div class="big">G-kracht meter</div><div class="status" id="gStatus">Gestopt</div></div>
+<p class="small">Rekenkundig: g = |acceleratieIncludingGravity| / 9.81</p>
+<canvas id="gCanvas" width="800" height="220"></canvas>
+<div class="row" style="margin-top:8px">
+<button id="gStart">Start meten</button>
+<button id="gStop">Stop</button>
+<button id="gClear">Wis grafiek</button>
+<label style="margin-left:8px">Smoothing: <input id="gSmooth" type="range" min="0" max="0.9" step="0.05" value="0.15"></label>
+</div>
+</div>
 
-    function startAudio() {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      oscillator = audioCtx.createOscillator();
-      oscillator.type = 'sine';
-      oscillator.frequency.value = baseFreq;
-      let gainNode = audioCtx.createGain();
-      gainNode.gain.value = 0.2;
-      oscillator.connect(gainNode).connect(audioCtx.destination);
-      oscillator.start();
-      started = true;
-    }
+<!-- Alarm paneel -->
+<div id="alarmPanel" class="panel" style="display:none">
+<div class="row"><div class="big">Alarmsysteem</div><div class="status" id="alarmStatus">Niet actief</div></div>
+<label>Afstandsdrempel (meter):</label>
+<input id="threshold" type="number" min="1" max="1000" value="5" style="width:100px;padding:8px;border-radius:6px;border:1px solid #d7d7df">
+<div style="margin-top:8px" class="small">Wanneer jouw iPhone meer dan deze afstand vanaf de startlocatie beweegt, gaat het alarm af.</div>
 
-    function stopAudio() {
-      if (oscillator) {
-        oscillator.stop();
-        oscillator.disconnect();
-        oscillator = null;
-      }
-      if (audioCtx) {
-        audioCtx.close();
-        audioCtx = null;
-      }
-      started = false;
-    }
+<div style="margin-top:10px" class="row">
+<button id="armAlarm">Activeer alarm (set start-locatie)</button>
+<button id="disarmAlarm" disabled>Deactiveer alarm (force)</button>
+<div class="status" id="distDisplay">Afstand: — m</div>
+</div>
 
-    function startMotion() {
-      motionHandler = function(event) {
-        if (!started) return;
-        let x = event.accelerationIncludingGravity.x || 0;
-        // Clamp x tussen -1.0 en 1.0 voor veilige variatie
-        x = Math.max(-1, Math.min(1, x));
-        let freq = baseFreq + Math.round(x * maxDelta);
-        if (oscillator) oscillator.frequency.value = freq;
-        document.getElementById('freq').textContent = freq;
-      };
-      window.addEventListener('devicemotion', motionHandler);
-    }
+<div id="alarmUI" style="margin-top:12px;display:none">
+<div class="danger big" id="alarmBanner">ALARM! Telefoon verplaatst!</div>
+<p class="small">Voer de code <strong>1968</strong> in om te stoppen.</p>
+<div class="codeDisplay" id="codeDisplay">----</div>
+<div class="keypad" id="keypad">
+<div class="key">1</div><div class="key">2</div><div class="key">3</div>
+<div class="key">4</div><div class="key">5</div><div class="key">6</div>
+<div class="key">7</div><div class="key">8</div><div class="key">9</div>
+<div class="key">←</div><div class="key">0</div><div class="key">OK</div>
+</div>
+</div>
+</div>
 
-    function stopMotion() {
-      if (motionHandler) {
-        window.removeEventListener('devicemotion', motionHandler);
-        motionHandler = null;
-      }
-    }
-  </script>
+<footer>Opmerkingen: GPS kan enkele meters onnauwkeurig zijn. iOS vereist toestemming voor sensoren en microfoon/spraak is pas mogelijk na een gebruikersklik.</footer>
+
+<script>
+// ======= HULPFUNCTIES & STATE =======
+let motionPermissionGranted = false;
+let orientationPermissionGranted = false;
+let geoPermissionGranted = false;
+
+const reqBtn = document.getElementById('requestPermission');
+const permStatus = document.getElementById('permStatus');
+
+async function requestPermissions() {
+permStatus.textContent = 'Toestemming vragen…';
+try {
+// iOS: expliciete permissie voor DeviceMotion / DeviceOrientation
+if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+const r = await DeviceMotionEvent.requestPermission();
+if (r === 'granted') motionPermissionGranted = true;
+} else {
+// andere browsers geven vaak direct
+motionPermissionGranted = true;
+}
+if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+const r2 = await DeviceOrientationEvent.requestPermission();
+if (r2 === 'granted') orientationPermissionGranted = true;
+} else {
+orientationPermissionGranted = true;
+}
+
+// Vraag geolocation permissie (triggert browser dialoog)
+if ('geolocation' in navigator) {
+navigator.geolocation.getCurrentPosition((pos) => {
+geoPermissionGranted = true;
+updatePermStatus();
+}, (err) => {
+console.warn('Geo geweigerd', err);
+geoPermissionGranted = false;
+updatePermStatus();
+}, {enableHighAccuracy:true, timeout:8000});
+} else {
+geoPermissionGranted = false;
+updatePermStatus();
+}
+
+updatePermStatus();
+} catch (e) {
+console.error(e);
+permStatus.textContent = 'Toestemming geweigerd of niet beschikbaar';
+}
+}
+
+function updatePermStatus(){
+permStatus.textContent = `Motion: ${motionPermissionGranted ? '✅' : '❌'} Geo: ${geoPermissionGranted ? '✅' : '❌'}`;
+}
+
+reqBtn.addEventListener('click', requestPermissions);
+
+// ======= START/SELECT LOGICA =======
+const startBtn = document.getElementById('startSelected');
+const enableG = document.getElementById('enableG');
+const enableAlarm = document.getElementById('enableAlarm');
+
+startBtn.addEventListener('click', () => {
+if (enableG.checked) document.getElementById('gPanel').style.display = 'block'; else document.getElementById('gPanel').style.display = 'none';
+if (enableAlarm.checked) document.getElementById('alarmPanel').style.display = 'block'; else document.getElementById('alarmPanel').style.display = 'none';
+});
+
+// ======= G-KRACHT METER =======
+const gCanvas = document.getElementById('gCanvas');
+const gCtx = gCanvas.getContext('2d');
+let gRunning = false;
+let gData = []; // array van {t, g}
+let gSmooth = parseFloat(document.getElementById('gSmooth').value);
+document.getElementById('gSmooth').addEventListener('input', e => { gSmooth = parseFloat(e.target.value); });
+
+const gStatus = document.getElementById('gStatus');
+document.getElementById('gStart').addEventListener('click', () => {
+if (!motionPermissionGranted && typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+// iOS: vraag expliciet
+DeviceMotionEvent.requestPermission().then(r => {
+if (r === 'granted') { motionPermissionGranted = true; startG(); updatePermStatus(); }
+else alert('Motion-toegang vereist');
+}).catch(()=>alert('Motion-toegang vereist'));
+} else {
+startG();
+}
+});
+document.getElementById('gStop').addEventListener('click', stopG);
+document.getElementById('gClear').addEventListener('click', () => { gData = []; drawG(); });
+
+let lastAx=0,lastAy=0,lastAz=0;
+let lowpassAlpha = 0.15;
+
+function startG(){
+if (gRunning) return;
+lowpassAlpha = gSmooth || 0.15;
+window.addEventListener('devicemotion', gMotionHandler, {passive:true});
+gRunning = true;
+gStatus.textContent = 'Meten…';
+startDrawLoop();
+}
+
+function stopG(){
+if (!gRunning) return;
+window.removeEventListener('devicemotion', gMotionHandler);
+gRunning = false;
+gStatus.textContent = 'Gestopt';
+}
+
+function gMotionHandler(ev){
+const a = ev.accelerationIncludingGravity || ev.acceleration;
+if (!a) return;
+// low-pass smoothing
+lastAx = lastAx + (a.x - lastAx) * lowpassAlpha;
+lastAy = lastAy + (a.y - lastAy) * lowpassAlpha;
+lastAz = lastAz + (a.z - lastAz) * lowpassAlpha;
+const mag = Math.sqrt(lastAx*lastAx + lastAy*lastAy + lastAz*lastAz);
+const g = mag / 9.81;
+gData.push({t:Date.now(), g});
+// bewaar alleen laatste N punten (~20s)
+const maxPts = 200;
+if (gData.length > maxPts) gData.splice(0, gData.length - maxPts);
+}
+
+function drawG(){
+const w = gCanvas.width;
+const h = gCanvas.height;
+gCtx.clearRect(0,0,w,h);
+// achtergrond raster
+gCtx.fillStyle = '#0b1220';
+gCtx.fillRect(0,0,w,h);
+gCtx.strokeStyle = '#14202b';
+gCtx.lineWidth = 1;
+for(let i=0;i<4;i++){
+gCtx.beginPath();
+gCtx.moveTo(0,h*(i+1)/5);
+gCtx.lineTo(w,h*(i+1)/5);
+gCtx.stroke();
+}
+if (gData.length < 2) return;
+// x: tijd over buffer, y: g waarde (0..4)
+const now = Date.now();
+const span = 20000; // 20s window
+const xmin = now - span;
+gCtx.beginPath();
+for (let i=0;i<gData.length;i++){
+const p = gData[i];
+const x = Math.round((p.t - xmin) / span * w);
+const gy = Math.min(6, Math.max(0, p.g));
+const y = h - (gy/6)*h;
+if (i===0) gCtx.moveTo(x,y); else gCtx.lineTo(x,y);
+}
+gCtx.lineWidth = 2;
+gCtx.strokeStyle = '#4fd1c5';
+gCtx.stroke();
+
+// huidige G tekst
+const last = gData[gData.length-1].g;
+gCtx.fillStyle = '#fff';
+gCtx.font = '14px system-ui';
+gCtx.fillText('g: ' + last.toFixed(2), 8, 18);
+}
+
+let drawLoopRunning = false;
+function startDrawLoop(){
+if (drawLoopRunning) return;
+drawLoopRunning = true;
+(function loop(){
+drawG();
+if (drawLoopRunning) requestAnimationFrame(loop);
+})();
+}
+function stopDrawLoop(){ drawLoopRunning = false; }
+
+// ======= ALARMSYSTEEM =======
+let alarmArmed = false;
+let watchId = null;
+let startPos = null;
+let thresholdMeters = parseFloat(document.getElementById('threshold').value) || 5;
+const distDisplay = document.getElementById('distDisplay');
+const alarmStatus = document.getElementById('alarmStatus');
+const armBtn = document.getElementById('armAlarm');
+const disarmBtn = document.getElementById('disarmAlarm');
+const alarmUI = document.getElementById('alarmUI');
+const alarmPanel = document.getElementById('alarmPanel');
+
+armBtn.addEventListener('click', () => {
+if (!('geolocation' in navigator)) { alert('Geolocatie niet beschikbaar'); return; }
+thresholdMeters = parseFloat(document.getElementById('threshold').value) || 5;
+// vraag actuele positie en start watcher
+navigator.geolocation.getCurrentPosition((pos) => {
+startPos = {lat: pos.coords.latitude, lon: pos.coords.longitude};
+// start watcher voor updates
+if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+watchId = navigator.geolocation.watchPosition(geoUpdate, geoError, {enableHighAccuracy:true, maximumAge:1000, timeout:10000});
+alarmArmed = true;
+alarmStatus.textContent = `Geactiveerd (drempel ${thresholdMeters} m)`;
+armBtn.disabled = true;
+disarmBtn.disabled = false;
+}, (err) => {
+alert('Kon start-locatie niet bepalen: ' + (err && err.message));
+}, {enableHighAccuracy:true, timeout:10000});
+});
+
+disarmBtn.addEventListener('click', () => {
+// force disarm (voor test/doorgeven)
+stopAlarmForced();
+});
+
+function geoError(err) {
+console.warn('Geo error', err);
+alarmStatus.textContent = 'Geo fout: ' + (err && err.message);
+}
+
+function geoUpdate(pos){
+if (!startPos) return;
+const curr = {lat: pos.coords.latitude, lon: pos.coords.longitude};
+const d = haversine(startPos.lat, startPos.lon, curr.lat, curr.lon);
+distDisplay.textContent = 'Afstand: ' + d.toFixed(1) + ' m';
+if (alarmArmed && !alarmTriggered && d >= thresholdMeters - 0.5) {
+// trigger alarm
+triggerAlarm(d);
+}
+}
+
+// haversine in meters
+function haversine(lat1, lon1, lat2, lon2){
+function rad(x){return x*Math.PI/180;}
+const R = 6371000;
+const dLat = rad(lat2-lat1), dLon = rad(lon2-lon1);
+const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(rad(lat1))*Math.cos(rad(lat2))*Math.sin(dLon/2)*Math.sin(dLon/2);
+const c = 2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+return R*c;
+}
+
+// ===== ALARM AUDIO & SPEECH =====
+let audioCtx = null;
+let sirenOsc = null;
+let sirenGain = null;
+let sirenLfo = null;
+let alarmTriggered = false;
+
+function ensureAudio(){
+if (!audioCtx) {
+audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+}
+
+function startSiren(){
+ensureAudio();
+sirenOsc = audioCtx.createOscillator();
+sirenGain = audioCtx.createGain();
+sirenOsc.type = 'sine';
+// modulate frequency for sirene-effect
+sirenLfo = audioCtx.createOscillator();
+const lfoGain = audioCtx.createGain();
+lfoGain.gain.value = 600; // modulation depth
+sirenLfo.type = 'sine';
+sirenLfo.frequency.value = 0.8;
+sirenOsc.frequency.value = 600;
+sirenLfo.connect(lfoGain);
+lfoGain.connect(sirenOsc.frequency);
+sirenOsc.connect(sirenGain);
+sirenGain.connect(audioCtx.destination);
+sirenGain.gain.value = 0.0001;
+sirenOsc.start();
+sirenLfo.start();
+// fade in
+sirenGain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime+0.2);
+}
+
+function stopSiren(){
+if (!audioCtx || !sirenOsc) return;
+sirenGain.gain.cancelScheduledValues(audioCtx.currentTime);
+sirenGain.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime+0.3);
+setTimeout(()=> {
+try{ sirenOsc.stop(); sirenLfo.stop(); }catch(e){}
+sirenOsc.disconnect(); sirenLfo.disconnect(); sirenGain.disconnect();
+sirenOsc = null; sirenLfo = null; sirenGain = null;
+}, 400);
+}
+
+function speakAlert(text){
+if (!('speechSynthesis' in window)) return;
+const u = new SpeechSynthesisUtterance(text);
+u.lang = 'nl-NL';
+// volume & rate aanpassen indien gewenst
+u.rate = 1.0;
+u.pitch = 1.0;
+window.speechSynthesis.cancel();
+window.speechSynthesis.speak(u);
+}
+
+// ====== TRIGGER ALARM ======
+function triggerAlarm(distance){
+if (alarmTriggered) return;
+alarmTriggered = true;
+alarmUI.style.display = 'block';
+alarmStatus.textContent = 'ALARM ACTIEF';
+// audio
+startSiren();
+// speak
+speakAlert('Alarm! Telefoon verplaatst. Voer code 1 9 6 8 in om te stoppen.');
+// blink body background
+startBlink();
+}
+
+// forced stop
+function stopAlarmForced(){
+alarmTriggered = false;
+alarmArmed = false;
+alarmUI.style.display = 'none';
+alarmStatus.textContent = 'Niet actief';
+armBtn.disabled = false;
+disarmBtn.disabled = true;
+stopSiren();
+stopBlink();
+if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+startPos = null;
+}
+
+// ===== BLINK VISUEEL =====
+let blinkInterval = null;
+function startBlink(){
+let on = false;
+blinkInterval = setInterval(()=> {
+on = !on;
+document.body.style.background = on ? '#fff7f7' : '#f6f8fb';
+}, 500);
+}
+function stopBlink(){
+if (blinkInterval) clearInterval(blinkInterval);
+blinkInterval = null;
+document.body.style.background = '';
+}
+
+// ===== KEYPAD & DEACTIVATIE CODE =====
+const keypad = document.getElementById('keypad');
+const codeDisplay = document.getElementById('codeDisplay');
+let codeBuffer = '';
+
+keypad.addEventListener('click', (e) => {
+if (!e.target.classList.contains('key')) return;
+const v = e.target.textContent.trim();
+if (v === '←') {
+codeBuffer = codeBuffer.slice(0, -1);
+} else if (v === 'OK') {
+checkCode();
+return;
+} else {
+if (codeBuffer.length < 10) codeBuffer += v;
+}
+codeDisplay.textContent = codeBuffer.padEnd(4,'-').slice(0,4);
+});
+
+function checkCode(){
+if (codeBuffer === '1968') {
+// stop alles
+stopAlarmForced();
+codeBuffer = '';
+codeDisplay.textContent = 'OK';
+setTimeout(()=> codeDisplay.textContent = '----', 800);
+speakAlert('Alarm gedeactiveerd.');
+} else {
+// fout
+codeDisplay.textContent = 'FOUT';
+speakAlert('Verkeerde code');
+codeBuffer = '';
+setTimeout(()=> codeDisplay.textContent = '----', 800);
+}
+}
+
+// ===== CLEANUP ON UNLOAD =====
+window.addEventListener('beforeunload', () => {
+stopSiren();
+stopBlink();
+if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+});
+
+// ==== EENVOUDIGE UX: als gebruiker op 'Start geselecteerd' niet gezet heeft, toont panes niet. ====
+
+// ===== INIT: teken lege grafiek =====
+drawG();
+
+</script>
 </body>
 </html>
