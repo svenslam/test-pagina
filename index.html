@@ -2,155 +2,152 @@
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>iPhone Sensor App</title>
+<title>iPhone Alarm & Camera</title>
 <style>
-body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-#menu, #gMeter, #alarmSystem { display: none; }
-canvas { border: 1px solid #000; width: 100%; height: 200px; }
-.keypad { display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; justify-content: center; margin-top: 20px; }
-.keypad button { font-size: 20px; padding: 15px; }
+body { font-family: sans-serif; text-align:center; background:#111; color:#eee; }
+video, canvas { width:90%; max-width:400px; margin:10px; }
+#keypad { display:none; margin-top:20px; }
+.btn { padding:10px 20px; margin:5px; font-size:16px; cursor:pointer; }
+.digit { width:60px; height:60px; font-size:24px; }
 </style>
 </head>
 <body>
-<h1>iPhone Sensor Demo</h1>
+<h1>📱 iPhone Alarm & Camera</h1>
 
-<div id="menu">
-<button onclick="startGMeter()">G-kracht Meter</button>
-<button onclick="startAlarm()">Alarm Systeem</button>
+<div>
+<button class="btn" onclick="startCamera('user')">Voorkant camera</button>
+<button class="btn" onclick="startCamera('environment')">Achterkant camera</button>
+<button class="btn" onclick="takePhoto()">📸 Foto maken</button>
+</div>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas" style="display:none;"></canvas>
+
+<hr>
+<div>
+<button class="btn" onclick="enableMotion()">Start sensoren</button>
+<button class="btn" onclick="activateAlarm()">🚨 Alarm Aan</button>
+<button class="btn" onclick="showKeypad()">❌ Alarm Uit</button>
 </div>
 
-<div id="gMeter">
-<h2>G-kracht Meter</h2>
-<canvas id="gCanvas" width="400" height="200"></canvas><br>
-<button onclick="stopGMeter()">Stop</button>
-</div>
+<div id="keypad"></div>
 
-<div id="alarmSystem">
-<h2>Alarm Systeem</h2>
-<p>Status: <span id="alarmStatus">Inactief</span></p>
-<audio id="alarmSound" loop>
+<audio id="siren" loop>
 <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
 </audio>
-<div class="keypad" id="keypad"></div>
-</div>
 
 <script>
-document.getElementById("menu").style.display = "block";
+let stream, video = document.getElementById('video'), canvas = document.getElementById('canvas');
+let alarmActive = false, motionPermission = false;
+let audioCtx, oscillator, siren = document.getElementById('siren');
+let moving = false;
+let moveTime = 0; // cumulatieve tijd in ms
+let lastUpdate = null;
+let sirenStarted = false;
 
-let gRunning = false, gData = [], gCtx;
-function startGMeter() {
-document.getElementById("menu").style.display = "none";
-document.getElementById("gMeter").style.display = "block";
-const canvas = document.getElementById("gCanvas");
-gCtx = canvas.getContext("2d");
-gData = [];
-gRunning = true;
-window.addEventListener("devicemotion", gHandler);
-}
-function gHandler(event) {
-if (!gRunning) return;
-let acc = event.accelerationIncludingGravity;
-if (!acc) return;
-let g = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z) / 9.81;
-gData.push(g);
-if (gData.length > 100) gData.shift();
-drawGraph();
-}
-function drawGraph() {
-gCtx.clearRect(0,0,400,200);
-gCtx.beginPath();
-gCtx.moveTo(0,200 - gData[0]*50);
-for (let i=1;i<gData.length;i++) {
-gCtx.lineTo(i*4, 200 - gData[i]*50);
-}
-gCtx.stroke();
-}
-function stopGMeter() {
-gRunning = false;
-window.removeEventListener("devicemotion", gHandler);
-document.getElementById("gMeter").style.display = "none";
-document.getElementById("menu").style.display = "block";
+async function startCamera(facingMode) {
+if(stream) stream.getTracks().forEach(t => t.stop());
+try {
+stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode } });
+video.srcObject = stream;
+} catch(e){ alert("Camera niet toegankelijk: " + e); }
 }
 
-// Alarm systeem
-let alarmActive = false;
-let alarmTimer = null;
-let alarmSound = document.getElementById("alarmSound");
-
-function startAlarm() {
-document.getElementById("menu").style.display = "none";
-document.getElementById("alarmSystem").style.display = "block";
-document.getElementById("alarmStatus").innerText = "Bewaking actief";
-alarmActive = false;
-alarmTimer = null;
-window.addEventListener("devicemotion", alarmMotion);
-buildKeypad();
+function takePhoto() {
+if(!stream) return alert("Camera niet actief");
+canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+canvas.getContext('2d').drawImage(video,0,0);
+canvas.toBlob(blob => {
+let a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = "foto.jpg";
+a.click();
+}, 'image/jpeg');
 }
 
-function alarmMotion(event) {
-let acc = event.accelerationIncludingGravity;
-if (!acc) return;
-let total = Math.sqrt(acc.x*acc.x + acc.y*acc.y + acc.z*acc.z);
-let diff = Math.abs(total - 9.81);
+function enableMotion(){
+if (typeof DeviceMotionEvent.requestPermission === 'function') {
+DeviceMotionEvent.requestPermission().then(res=>{
+if(res === 'granted'){ motionPermission = true; alert("Bewegingssensor geactiveerd"); }
+});
+} else { motionPermission = true; alert("Bewegingssensor geactiveerd"); }
+}
 
-if (diff > 1.5) { // drempelwaarde beweging
-if (!alarmTimer) {
-alarmTimer = setTimeout(triggerAlarm, 2000); // 2 sec beweging
+function activateAlarm(){
+if(!motionPermission) return alert("Eerst sensoren activeren!");
+alarmActive = true; alert("Alarm ingeschakeld");
+moveTime = 0; sirenStarted = false; lastUpdate = null;
+window.addEventListener('devicemotion', handleMotion);
+}
+
+function handleMotion(e){
+if(!alarmActive || sirenStarted) return;
+
+let ax = e.acceleration.x||0, ay = e.acceleration.y||0, az = e.acceleration.z||0;
+let g = Math.sqrt(ax*ax+ay*ay+az*az);
+let now = Date.now();
+
+if(g > 1){ // beweging gedetecteerd
+if(lastUpdate) {
+moveTime += (now - lastUpdate);
+}
+lastUpdate = now;
+
+if(!moving){
+moving = true;
+startTone();
+}
+if(oscillator) oscillator.frequency.value = 200 + moveTime/10;
+
+if(moveTime >= 2000){ // 2 sec totaal
+stopTone();
+startSiren();
+sirenStarted = true;
 }
 } else {
-clearTimeout(alarmTimer);
-alarmTimer = null;
+moving = false;
+stopTone();
+lastUpdate = now;
 }
 }
 
-function triggerAlarm() {
-alarmActive = true;
-document.getElementById("alarmStatus").innerText = "ALARM!";
-alarmSound.play();
-let msg = new SpeechSynthesisUtterance("Alarm! Telefoon verplaatst!");
-window.speechSynthesis.speak(msg);
+function startTone(){
+if(audioCtx) return;
+audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+oscillator = audioCtx.createOscillator();
+oscillator.type = "sine";
+oscillator.frequency.value = 200;
+oscillator.connect(audioCtx.destination);
+oscillator.start();
+}
+function stopTone(){
+if(oscillator){ oscillator.stop(); oscillator.disconnect(); }
+oscillator=null; audioCtx=null;
+}
+function startSiren(){ siren.play(); }
+function stopSiren(){ siren.pause(); siren.currentTime=0; }
+
+function showKeypad(){
+let kp = document.getElementById('keypad');
+kp.style.display = 'block'; kp.innerHTML='';
+let input = document.createElement('input'); input.type='password'; input.id='pin'; input.readOnly=true;
+kp.appendChild(input); kp.appendChild(document.createElement('br'));
+for(let i=1;i<=9;i++){ addBtn(i,kp); if(i%3==0) kp.appendChild(document.createElement('br')); }
+addBtn(0,kp);
+let ok = document.createElement('button'); ok.className="digit"; ok.textContent="OK";
+ok.onclick=()=>{ if(input.value==="1968"){ deactivateAlarm(); } else { input.value=''; } };
+kp.appendChild(ok);
+}
+function addBtn(n,kp){
+let b=document.createElement('button'); b.className='digit'; b.textContent=n;
+b.onclick=()=>{ document.getElementById('pin').value+=n; };
+kp.appendChild(b);
 }
 
-function buildKeypad() {
-const keypad = document.getElementById("keypad");
-keypad.innerHTML = "";
-let code = "";
-const correct = "1968";
-for (let i=1;i<=9;i++) {
-let btn = document.createElement("button");
-btn.innerText = i;
-btn.onclick = ()=> {
-code += i;
-if (code === correct) {
-deactivateAlarm();
-code = "";
-} else if (code.length >= 4) {
-code = "";
-}
-};
-keypad.appendChild(btn);
-}
-let zero = document.createElement("button");
-zero.innerText = "0";
-zero.onclick = ()=> {
-code += "0";
-if (code === correct) {
-deactivateAlarm();
-code = "";
-} else if (code.length >= 4) {
-code = "";
-}
-};
-keypad.appendChild(zero);
-}
-
-function deactivateAlarm() {
-alarmActive = false;
-document.getElementById("alarmStatus").innerText = "Alarm gedeactiveerd";
-alarmSound.pause();
-alarmSound.currentTime = 0;
-window.speechSynthesis.cancel();
+function deactivateAlarm(){
+alarmActive=false; stopTone(); stopSiren();
+window.removeEventListener('devicemotion', handleMotion);
+document.getElementById('keypad').style.display='none';
+alert("Alarm gedeactiveerd");
 }
 </script>
 </body>
