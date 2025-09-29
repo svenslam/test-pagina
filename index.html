@@ -50,6 +50,37 @@ const PIN_CODE = "1968"; // De pincode voor het uitschakelen van het alarm
 const alarmStatusElement = document.getElementById('alarmStatus');
 const sensorStatusElement = document.getElementById('sensorStatus');
 
+let audioInitialized = false; // Vlag om te controleren of de audio is geïnitialiseerd
+
+// Functie om de audio te initialiseren na een gebruikersinteractie
+function initAudio() {
+    if (audioInitialized) return;
+    try {
+        // Maak de AudioContext aan
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        
+        // Laad en "ontgrendel" het sirene-audiobestand door het kort af te spelen en te pauzeren
+        siren.load();
+        const playPromise = siren.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                siren.pause();
+                siren.currentTime = 0;
+                console.log("Audio is succesvol ontgrendeld.");
+            }).catch(error => {
+                console.warn("Kon audio niet automatisch ontgrendelen.", error);
+            });
+        }
+        audioInitialized = true;
+    } catch (e) {
+        console.error("Kon AudioContext niet aanmaken:", e);
+        alert("Web Audio API wordt niet ondersteund in deze browser.");
+    }
+}
+
 // Functie om de status-indicatoren bij te werken
 function updateStatusIndicators() {
     if (alarmActive) {
@@ -74,6 +105,7 @@ document.addEventListener('DOMContentLoaded', updateStatusIndicators);
 
 
 async function enableMotion(){
+    initAudio(); // Initialiseer audio bij de eerste gebruikersactie
     // Voorkom dubbele registratie van de event listener
     if (motionPermission) {
         alert("Bewegingssensoren zijn al geactiveerd.");
@@ -104,6 +136,7 @@ async function enableMotion(){
 }
 
 function activateAlarm(){
+    initAudio(); // Zorg ervoor dat de audio is geïnitialiseerd
     if(!motionPermission) {
         alert("Eerst sensoren activeren!");
         return;
@@ -124,15 +157,10 @@ function activateAlarm(){
 function handleMotion(e){
     if(!alarmActive || sirenStarted) return; // Stop verwerking als alarm inactief is of sirene al speelt
 
-    // Gebruik absolute waarden voor acceleratie om beweging in elke richting te detecteren
     let ax = Math.abs(e.acceleration.x||0);
     let ay = Math.abs(e.acceleration.y||0);
     let az = Math.abs(e.acceleration.z||0);
-
-    // Sum van absolute versnellingen of een andere meting
-    let totalAcceleration = ax + ay + az; // Eenvoudige som
-    // Of: let g = Math.sqrt(ax*ax + ay*ay + az*az); // Magnitude van de versnelling
-
+    let totalAcceleration = ax + ay + az;
     let now = Date.now();
 
     if(totalAcceleration > SENSITIVITY_THRESHOLD){ // Beweging gedetecteerd
@@ -145,60 +173,58 @@ function handleMotion(e){
             moving = true;
             startTone();
         }
-        // Pas toonhoogte aan op basis van cumulatieve bewegingstijd
-        if(oscillator) oscillator.frequency.value = 200 + Math.min(moveTime, ALARM_TRIGGER_TIME_MS * 2) / 10; // Beperk max toonhoogte
+        if(oscillator) oscillator.frequency.value = 200 + Math.min(moveTime, ALARM_TRIGGER_TIME_MS * 2) / 10;
 
-        if(moveTime >= ALARM_TRIGGER_TIME_MS){ // Voldoende cumulatieve beweging gedetecteerd
-            if (!sirenStarted) { // Zorg dat de sirene maar één keer start
-                stopTone(); // Stop de toon als de sirene start
+        if(moveTime >= ALARM_TRIGGER_TIME_MS){
+            if (!sirenStarted) {
+                stopTone();
                 startSiren();
                 sirenStarted = true;
-                // Optioneel: Maak een foto hier als de camera er nog zou zijn
             }
         }
     } else {
-        // Als het apparaat stil ligt, reset de bewegingstijd langzaam of direct
-        // Direct resetten:
-        if (moving) { // Alleen als het eerder bewoog
+        if (moving) {
             moving = false;
-            moveTime = 0; // Reset bewegingstijd
-            stopTone(); // Stop de toon direct
+            moveTime = 0;
+            stopTone();
         }
-        lastUpdate = now; // Update lastUpdate ook als er geen beweging is, om "stille" periodes vast te leggen
+        lastUpdate = now;
     }
 }
 
 function startTone(){
-    if(audioCtx && oscillator) return; // Voorkom dubbele start
-    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(!audioCtx || oscillator) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume(); // Zorg ervoor dat de context actief is
     oscillator = audioCtx.createOscillator();
     oscillator.type = "sine";
     oscillator.frequency.value = 200;
     oscillator.connect(audioCtx.destination);
     oscillator.start();
 }
+
 function stopTone(){
     if(oscillator){
         oscillator.stop();
         oscillator.disconnect();
         oscillator = null;
     }
-    if(audioCtx) {
-        audioCtx.close(); // Sluit de audiocontext om resources vrij te geven
-        audioCtx = null;
-    }
+    // Sluit de audiocontext niet, zodat deze hergebruikt kan worden
 }
+
 function startSiren(){
-    // Controleer of de sirene al speelt
     if (siren.paused) {
-        siren.play().catch(e => {
-            alert("Fout bij afspelen sirene. Zorg voor gebruikersinteractie en/of geef toestemming voor media-afspelen: " + e.message);
-        });
+        const playPromise = siren.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => {
+                // Log de fout naar de console i.p.v. een alert te tonen
+                console.error("Fout bij afspelen sirene: ", e.message);
+            });
+        }
     }
 }
 function stopSiren(){
     siren.pause();
-    siren.currentTime=0; // Reset naar begin
+    siren.currentTime=0;
 }
 
 function showKeypad(){
@@ -209,30 +235,28 @@ function showKeypad(){
     let input = document.createElement('input');
     input.type='password';
     input.id='pin';
-    input.readOnly=true; // Voorkom handmatige invoer met toetsenbord
+    input.readOnly=true;
     input.placeholder = "Voer PIN in";
     kp.appendChild(input);
     kp.appendChild(document.createElement('br'));
 
-    // Toetsen 1-9
     for(let i=1;i<=9;i++){
         addBtn(i,kp);
         if(i%3==0) kp.appendChild(document.createElement('br'));
     }
-    // Toets 0
-    kp.appendChild(document.createElement('br')); // Nieuwe rij voor 0 en OK
+    kp.appendChild(document.createElement('br'));
     addBtn(0,kp);
 
     let ok = document.createElement('button');
     ok.className="digit";
     ok.textContent="OK";
     ok.onclick=()=>{
-        if(input.value===PIN_CODE){ // Gebruik de constante PIN_CODE
+        if(input.value===PIN_CODE){
             deactivateAlarm();
-            input.value = ''; // Leeg de pincode na succes
+            input.value = '';
         } else {
             alert("Onjuiste pincode!");
-            input.value=''; // Leeg de pincode bij fout
+            input.value='';
         }
     };
     kp.appendChild(ok);
@@ -252,7 +276,7 @@ function addBtn(n,kp){
     b.textContent=n;
     b.onclick=()=>{
         const pinInput = document.getElementById('pin');
-        if (pinInput.value.length < PIN_CODE.length) { // Voorkom te lange PIN invoer
+        if (pinInput.value.length < PIN_CODE.length) {
             pinInput.value+=n;
         }
     };
@@ -263,11 +287,6 @@ function deactivateAlarm(){
     alarmActive=false;
     stopTone();
     stopSiren();
-    // Verwijder de event listener ALLEEN als deze eerder is toegevoegd via enableMotion
-    // Dit is belangrijk om te voorkomen dat er meerdere listeners actief zijn
-    // De listener wordt nu eenmaal toegevoegd in enableMotion()
-    // window.removeEventListener('devicemotion', handleMotion); // Niet verwijderen hier, want enableMotion voegt hem maar één keer toe
-
     document.getElementById('keypad').style.display='none';
     alert("Alarm gedeactiveerd.");
     updateStatusIndicators();
@@ -275,3 +294,4 @@ function deactivateAlarm(){
 </script>
 </body>
 </html>
+
