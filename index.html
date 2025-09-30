@@ -1,297 +1,123 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<title>iPhone Bewegingsalarm</title>
-<style>
-body { font-family: sans-serif; text-align:center; background:#111; color:#eee; }
-.btn { padding:15px 30px; margin:10px; font-size:20px; cursor:pointer; border-radius: 8px; border: none; color: #fff; background-color: #007aff; transition: background-color 0.3s ease; }
-.btn:hover { background-color: #0056b3; }
-#keypad { display:none; margin-top:30px; }
-.digit { width:80px; height:80px; font-size:28px; margin:5px; cursor:pointer; border-radius: 8px; border: 1px solid #333; background-color: #333; color: #eee; }
-.digit:hover { background-color: #555; }
-#pin { width: calc(80px * 3 + 5px * 4); height: 50px; font-size: 24px; text-align: center; margin-bottom: 10px; border-radius: 8px; border: 1px solid #555; background-color: #222; color: #eee; }
-.status-indicator { margin-top: 20px; font-size: 18px; font-weight: bold; }
-.status-indicator.active { color: #28a745; } /* Groen voor actief */
-.status-indicator.inactive { color: #dc3545; } /* Rood voor inactief */
-</style>
+  <meta charset="UTF-8">
+  <title>Verlanglijst 57</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      background: #0d0d0d;
+      color: #f0f0f0;
+      font-family: 'Montserrat', sans-serif;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+    }
+    header {
+      padding: 2rem;
+      background: linear-gradient(135deg, #111, #222);
+      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    }
+    h1 {
+      font-size: 3rem;
+      margin: 0;
+      color: #ff4500;
+    }
+    #countdown {
+      font-size: 2rem;
+      margin-top: 1rem;
+      font-weight: bold;
+      color: #00ffcc;
+    }
+    .gift-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .gift {
+      background: #1a1a1a;
+      border-radius: 15px;
+      padding: 1rem;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+      transition: transform 0.2s;
+    }
+    .gift:hover {
+      transform: scale(1.05);
+    }
+    .gift img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+    .gift h2 {
+      color: #ff4500;
+      font-size: 1.5rem;
+      margin: 0.5rem 0;
+    }
+    .gift p {
+      font-size: 1rem;
+      color: #ccc;
+      margin: 0.5rem 0 1rem;
+    }
+    .gift a {
+      display: inline-block;
+      background: #ff4500;
+      color: #fff;
+      padding: 0.7rem 1.2rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .gift a:hover {
+      background: #e63e00;
+    }
+  </style>
 </head>
 <body>
-<h1>iPhone Bewegingsalarm</h1>
+  <header>
+    <h1>🎉 Verlanglijst – 57 jaar 🎂</h1>
+    <div id="countdown"></div>
+  </header>
 
-<div class="status-indicator" id="alarmStatus">Alarm Inactief</div>
-<div class="status-indicator" id="sensorStatus">Sensoren: Niet Geactiveerd</div>
+  <main class="gift-container">
+    <div class="gift">
+      <img src="https://media.s-bol.com/qNqKJ0lmJ6L/550x773.jpg" alt="Neustrimmer Wellshave">
+      <h2>Wellshave 2-in-1 Neustrimmer</h2>
+      <p>Handige premium trimmer voor neus, wenkbrauwen en oorhaar. Stoer, praktisch en altijd scherp voor de dag komen.</p>
+      <a href="https://www.bol.com/nl/nl/p/wellshave-2-in-1-neustrimmer-premium-wenkbrauw-en-oorhaar-trimmer-neushaartrimmer-voor-mannen/9300000141590370/" target="_blank">
+        Bekijk cadeau <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </a>
+    </div>
+  </main>
 
-<div>
-<button class="btn" onclick="enableMotion()">Start Sensoren</button>
-<button class="btn" onclick="activateAlarm()">Alarm Aan</button>
-<button class="btn" onclick="showKeypad()">Alarm Uit</button>
-</div>
+  <script>
+    // Countdown instellen naar verjaardag
+    const birthday = new Date("2025-11-15T00:00:00").getTime(); // <-- pas de datum aan!
+    const countdownEl = document.getElementById("countdown");
 
-<div id="keypad"></div>
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const diff = birthday - now;
 
-<audio id="siren" loop>
-<source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
-</audio>
-
-<script>
-let alarmActive = false;
-let motionPermission = false;
-let audioCtx, oscillator;
-const siren = document.getElementById('siren');
-let moving = false;
-let moveTime = 0; // cumulatieve tijd in ms
-let lastUpdate = null;
-let sirenStarted = false;
-const SENSITIVITY_THRESHOLD = 0.5; // Verlaagde drempelwaarde voor beweging (was 1)
-const ALARM_TRIGGER_TIME_MS = 1000; // Alarm af laten gaan na 1 seconde continue beweging (was 2000)
-const PIN_CODE = "1968"; // De pincode voor het uitschakelen van het alarm
-
-const alarmStatusElement = document.getElementById('alarmStatus');
-const sensorStatusElement = document.getElementById('sensorStatus');
-
-let audioInitialized = false; // Vlag om te controleren of de audio is geïnitialiseerd
-
-// Functie om de audio te initialiseren na een gebruikersinteractie
-function initAudio() {
-    if (audioInitialized) return;
-    try {
-        // Maak de AudioContext aan
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-        
-        // Laad en "ontgrendel" het sirene-audiobestand door het kort af te spelen en te pauzeren
-        siren.load();
-        const playPromise = siren.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                siren.pause();
-                siren.currentTime = 0;
-                console.log("Audio is succesvol ontgrendeld.");
-            }).catch(error => {
-                console.warn("Kon audio niet automatisch ontgrendelen.", error);
-            });
-        }
-        audioInitialized = true;
-    } catch (e) {
-        console.error("Kon AudioContext niet aanmaken:", e);
-        alert("Web Audio API wordt niet ondersteund in deze browser.");
-    }
-}
-
-// Functie om de status-indicatoren bij te werken
-function updateStatusIndicators() {
-    if (alarmActive) {
-        alarmStatusElement.textContent = "Alarm: ACTIEF";
-        alarmStatusElement.className = "status-indicator active";
-    } else {
-        alarmStatusElement.textContent = "Alarm: Inactief";
-        alarmStatusElement.className = "status-indicator inactive";
-    }
-
-    if (motionPermission) {
-        sensorStatusElement.textContent = "Sensoren: Geactiveerd";
-        sensorStatusElement.className = "status-indicator active";
-    } else {
-        sensorStatusElement.textContent = "Sensoren: Niet Geactiveerd";
-        sensorStatusElement.className = "status-indicator inactive";
-    }
-}
-
-// Initialiseer status bij laden van de pagina
-document.addEventListener('DOMContentLoaded', updateStatusIndicators);
-
-
-async function enableMotion(){
-    initAudio(); // Initialiseer audio bij de eerste gebruikersactie
-    // Voorkom dubbele registratie van de event listener
-    if (motionPermission) {
-        alert("Bewegingssensoren zijn al geactiveerd.");
+      if (diff <= 0) {
+        countdownEl.innerHTML = "🎂 Het is feest! 🎉";
         return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      countdownEl.innerHTML = `${days} dagen ${hours}u ${minutes}m ${seconds}s`;
     }
 
-    if (typeof DeviceMotionEvent.requestPermission === 'function') {
-        try {
-            const permissionResult = await DeviceMotionEvent.requestPermission();
-            if(permissionResult === 'granted'){
-                motionPermission = true;
-                alert("Bewegingssensor geactiveerd. U kunt nu het alarm inschakelen.");
-                // Voeg de event listener hier toe, na toestemming
-                window.addEventListener('devicemotion', handleMotion);
-            } else {
-                alert("Toegang tot bewegingssensor geweigerd.");
-            }
-        } catch(e) {
-            alert("Fout bij aanvragen bewegingssensor toestemming: " + e.message);
-        }
-    } else {
-        // Voor browsers die requestPermission niet ondersteunen (meestal Android/Chrome)
-        motionPermission = true;
-        alert("Bewegingssensor geactiveerd. U kunt nu het alarm inschakelen.");
-        window.addEventListener('devicemotion', handleMotion);
-    }
-    updateStatusIndicators();
-}
-
-function activateAlarm(){
-    initAudio(); // Zorg ervoor dat de audio is geïnitialiseerd
-    if(!motionPermission) {
-        alert("Eerst sensoren activeren!");
-        return;
-    }
-    if (alarmActive) {
-        alert("Alarm is al ingeschakeld.");
-        return;
-    }
-
-    alarmActive = true;
-    alert("Alarm ingeschakeld. Het alarm gaat af bij beweging.");
-    moveTime = 0;
-    sirenStarted = false;
-    lastUpdate = null;
-    updateStatusIndicators();
-}
-
-function handleMotion(e){
-    if(!alarmActive || sirenStarted) return; // Stop verwerking als alarm inactief is of sirene al speelt
-
-    let ax = Math.abs(e.acceleration.x||0);
-    let ay = Math.abs(e.acceleration.y||0);
-    let az = Math.abs(e.acceleration.z||0);
-    let totalAcceleration = ax + ay + az;
-    let now = Date.now();
-
-    if(totalAcceleration > SENSITIVITY_THRESHOLD){ // Beweging gedetecteerd
-        if(lastUpdate) {
-            moveTime += (now - lastUpdate);
-        }
-        lastUpdate = now;
-
-        if(!moving){
-            moving = true;
-            startTone();
-        }
-        if(oscillator) oscillator.frequency.value = 200 + Math.min(moveTime, ALARM_TRIGGER_TIME_MS * 2) / 10;
-
-        if(moveTime >= ALARM_TRIGGER_TIME_MS){
-            if (!sirenStarted) {
-                stopTone();
-                startSiren();
-                sirenStarted = true;
-            }
-        }
-    } else {
-        if (moving) {
-            moving = false;
-            moveTime = 0;
-            stopTone();
-        }
-        lastUpdate = now;
-    }
-}
-
-function startTone(){
-    if(!audioCtx || oscillator) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume(); // Zorg ervoor dat de context actief is
-    oscillator = audioCtx.createOscillator();
-    oscillator.type = "sine";
-    oscillator.frequency.value = 200;
-    oscillator.connect(audioCtx.destination);
-    oscillator.start();
-}
-
-function stopTone(){
-    if(oscillator){
-        oscillator.stop();
-        oscillator.disconnect();
-        oscillator = null;
-    }
-    // Sluit de audiocontext niet, zodat deze hergebruikt kan worden
-}
-
-function startSiren(){
-    if (siren.paused) {
-        const playPromise = siren.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(e => {
-                // Log de fout naar de console i.p.v. een alert te tonen
-                console.error("Fout bij afspelen sirene: ", e.message);
-            });
-        }
-    }
-}
-function stopSiren(){
-    siren.pause();
-    siren.currentTime=0;
-}
-
-function showKeypad(){
-    let kp = document.getElementById('keypad');
-    kp.style.display = 'block';
-    kp.innerHTML='';
-
-    let input = document.createElement('input');
-    input.type='password';
-    input.id='pin';
-    input.readOnly=true;
-    input.placeholder = "Voer PIN in";
-    kp.appendChild(input);
-    kp.appendChild(document.createElement('br'));
-
-    for(let i=1;i<=9;i++){
-        addBtn(i,kp);
-        if(i%3==0) kp.appendChild(document.createElement('br'));
-    }
-    kp.appendChild(document.createElement('br'));
-    addBtn(0,kp);
-
-    let ok = document.createElement('button');
-    ok.className="digit";
-    ok.textContent="OK";
-    ok.onclick=()=>{
-        if(input.value===PIN_CODE){
-            deactivateAlarm();
-            input.value = '';
-        } else {
-            alert("Onjuiste pincode!");
-            input.value='';
-        }
-    };
-    kp.appendChild(ok);
-
-    let clearBtn = document.createElement('button');
-    clearBtn.className="digit";
-    clearBtn.textContent="CLR";
-    clearBtn.onclick=()=>{
-        input.value='';
-    };
-    kp.appendChild(clearBtn);
-}
-
-function addBtn(n,kp){
-    let b=document.createElement('button');
-    b.className='digit';
-    b.textContent=n;
-    b.onclick=()=>{
-        const pinInput = document.getElementById('pin');
-        if (pinInput.value.length < PIN_CODE.length) {
-            pinInput.value+=n;
-        }
-    };
-    kp.appendChild(b);
-}
-
-function deactivateAlarm(){
-    alarmActive=false;
-    stopTone();
-    stopSiren();
-    document.getElementById('keypad').style.display='none';
-    alert("Alarm gedeactiveerd.");
-    updateStatusIndicators();
-}
-</script>
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+  </script>
 </body>
 </html>
-
