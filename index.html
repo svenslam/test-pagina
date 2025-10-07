@@ -7,33 +7,81 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body {
-      background: #0c0c0c;
+      background: linear-gradient(180deg, #0c0c0c, #141414);
       color: #f5f5f5;
       font-family: 'Montserrat', sans-serif;
       margin: 0;
       padding: 0;
       text-align: center;
     }
+
+    /* HEADER FOTO */
     header {
-      padding: 2rem 1rem;
-      background: linear-gradient(135deg, #111, #1c1c1c);
-      box-shadow: 0 0 25px rgba(0,0,0,0.8);
+      position: relative;
+      color: #fff;
     }
-    h1 {
+    header img {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      opacity: 0.9;
+    }
+    header h1 {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       font-size: 2.5rem;
       color: #ff4500;
-      margin-bottom: 1rem;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      text-shadow: 0 0 8px #000;
     }
+
+    /* OVER SVEN */
+    .about {
+      background: #1a1a1a;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+      max-width: 800px;
+      border-radius: 16px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+      margin-top: -2rem;
+      position: relative;
+      z-index: 5;
+    }
+    .about h2 {
+      color: #ff4500;
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .about p {
+      color: #ccc;
+      font-size: 1rem;
+      line-height: 1.6;
+      max-width: 600px;
+      margin: 0.5rem auto 0;
+    }
+    .about i {
+      color: #00ffc3;
+      margin: 0 0.4rem;
+    }
+
+    /* COUNTDOWN */
     #countdown {
-      font-size: 2rem;
+      font-size: 2.2rem;
       font-weight: bold;
       color: #00ffc3;
       background: #1a1a1a;
       display: inline-block;
-      padding: 0.5rem 1rem;
+      padding: 0.7rem 1.2rem;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,255,200,0.4);
+      box-shadow: 0 0 12px rgba(0,255,200,0.4);
+      margin: 2rem auto 1rem;
     }
+
+    /* GIFTS */
     .gift-container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -81,22 +129,37 @@
     .gift a:hover {
       background: #e63e00;
     }
+
     footer {
       padding: 1rem;
-      color: #666;
+      color: #777;
       font-size: 0.9rem;
+      margin-top: 2rem;
     }
+
+    /* RESPONSIVE */
     @media (max-width: 600px) {
-      h1 { font-size: 2rem; }
+      header h1 { font-size: 1.6rem; bottom: 10px; }
       #countdown { font-size: 1.5rem; padding: 0.4rem 0.8rem; }
+      .about p { font-size: 0.95rem; }
     }
   </style>
 </head>
 <body>
   <header>
+    <img src="sven%20steen%20montblanc.JPG" alt="Sven in de bergen">
     <h1>🎉 Sven's Verlanglijst – 57 jaar 🎂</h1>
-    <div id="countdown"></div>
   </header>
+
+  <section class="about">
+    <h2>Over Sven</h2>
+    <p><i class="fa-solid fa-mountain"></i> Bergwandelaar in hart en nieren, 
+       <i class="fa-solid fa-utensils"></i> liefhebber van goed eten en 
+       <i class="fa-solid fa-beer-mug-empty"></i> geniet van een goed glas bier bij een stevige droge worst.  
+       Met 57 jaar ervaring in het leven weet hij precies wat stoer en smaakvol is.</p>
+  </section>
+
+  <div id="countdown"></div>
 
   <main class="gift-container">
 
@@ -129,15 +192,18 @@
 
     <!-- Cadeau 4 -->
     <div class="gift">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/d/d4/Droge_worst.jpg" alt="Droge Drentse worst">
-      <h2>Droge Drentse Worst</h2>
-      <p>Eerlijk en hartig — een lekkere droge worst (met of zonder venkel), maar absoluut <strong>zonder kruidnagel</strong>! Perfect bij een goed glas bier.</p>
+      <img src="https://www.ekoplaza.nl/globalassets/producten/0001160767.jpg" alt="Droge Drentse worst">
+      <h2>Droge Drentse Worst met Venkel</h2>
+      <p>Eerlijk en hartig — een lekkere droge worst met een vleugje venkel (maar géén kruidnagel!). Perfect bij een goed glas bier of tijdens een stevige wandeling.</p>
+      <a href="https://www.ekoplaza.nl/nl/producten/product/droge-worst-wild-zwijn-venkel-0001160767" target="_blank">
+        Bekijk cadeau <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </a>
     </div>
 
   </main>
 
   <footer>
-    © 2025 Sven’s Verlanglijst — gemaakt met 💪 en een vleugje honger
+    © 2025 Sven’s Verlanglijst — gemaakt met 💪 en een vleugje berglucht
   </footer>
 
   <script>
@@ -149,7 +215,7 @@
       const diff = birthday - now;
 
       if (diff <= 0) {
-        countdownEl.innerHTML = "🎂 Het is feest, Sven is 57! 🥳";
+        countdownEl.innerHTML = "🎂 Het is feest! Sven is 57! 🥳";
         return;
       }
 
