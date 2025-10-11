@@ -2,12 +2,13 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <title>Verlanglijst Sven – 57 jaar</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sven's Verlanglijst – 57 jaar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     body {
-      background: #0d0d0d url('https://www.transparenttextures.com/patterns/leather.png') repeat;
+      background: #0d0d0d url('https://www.transparenttextures.com/patterns/worn-dots.png') repeat;
+      background-attachment: fixed;
       color: #f5f5f5;
       font-family: 'Montserrat', sans-serif;
       margin: 0;
@@ -16,41 +17,43 @@
     }
 
     header {
-      background: linear-gradient(135deg, #111, #222);
       padding: 2rem 1rem;
-      box-shadow: 0 0 25px rgba(0,0,0,0.7);
+      background: linear-gradient(135deg, #141414, #1e1e1e);
+      box-shadow: 0 0 25px rgba(0,0,0,0.8);
       border-bottom: 2px solid #ff4500;
     }
 
     h1 {
       font-size: 2.5rem;
       color: #ff4500;
-      margin: 0;
+      margin-bottom: 1rem;
     }
 
     #countdown {
-      font-size: 1.8rem;
-      color: #00ffcc;
-      margin-top: 1rem;
+      font-size: 2rem;
       font-weight: bold;
-      letter-spacing: 1px;
-      text-shadow: 0 0 10px #00ffcc;
+      color: #00ffc3;
+      background: #1a1a1a;
+      display: inline-block;
+      padding: 0.6rem 1.2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,255,200,0.4);
     }
 
     .gift-container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-      padding: 2rem;
+      gap: 1.5rem;
+      padding: 2rem 1rem;
       max-width: 1200px;
       margin: auto;
     }
 
     .gift {
-      background: rgba(26, 26, 26, 0.95);
-      border-radius: 15px;
+      background: rgba(26, 26, 26, 0.92);
+      border-radius: 16px;
       padding: 1rem;
-      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+      box-shadow: 0 0 15px rgba(0,0,0,0.7);
       transition: transform 0.3s, box-shadow 0.3s;
       border: 1px solid #333;
     }
@@ -62,25 +65,26 @@
 
     .gift img {
       width: 100%;
-      height: auto;
-      border-radius: 10px;
+      border-radius: 12px;
       margin-bottom: 1rem;
     }
 
     .gift h2 {
       color: #ff4500;
       font-size: 1.4rem;
-      margin: 0.5rem 0;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .gift p {
-      font-size: 1rem;
       color: #ccc;
+      font-size: 1rem;
+      line-height: 1.5;
       margin-bottom: 1rem;
     }
 
     .gift a {
-      display: inline-block;
       background: #ff4500;
       color: #fff;
       padding: 0.7rem 1.2rem;
@@ -94,80 +98,71 @@
       background: #e63e00;
     }
 
-    section#over-sven {
-      max-width: 800px;
-      margin: 2rem auto;
-      background: rgba(17, 17, 17, 0.95);
-      border-radius: 15px;
-      padding: 1.5rem;
-      box-shadow: 0 0 15px rgba(0,0,0,0.6);
-      border: 1px solid #333;
-    }
-
-    section#over-sven h2 {
-      color: #ff4500;
-      font-size: 1.8rem;
-    }
-
-    section#over-sven p {
-      font-size: 1.1rem;
-      color: #ddd;
-      line-height: 1.5;
+    footer {
+      padding: 1rem;
+      color: #888;
+      font-size: 0.9rem;
+      margin-top: 2rem;
+      background: rgba(20,20,20,0.95);
+      border-top: 1px solid #333;
     }
 
     @media (max-width: 600px) {
       h1 { font-size: 2rem; }
-      #countdown { font-size: 1.4rem; }
-      .gift h2 { font-size: 1.2rem; }
-      section#over-sven p { font-size: 1rem; }
+      #countdown { font-size: 1.4rem; padding: 0.4rem 0.8rem; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>🎉 Sven wordt 57! 🎂</h1>
+    <h1>🎉 Sven's Verlanglijst – 57 jaar 🎂</h1>
     <div id="countdown"></div>
   </header>
 
   <main class="gift-container">
 
+    <!-- Cadeau 1 -->
     <div class="gift">
-      <img src="recept kalender.jpg" alt="Recept kalender">
-      <h2>Recept Kalender – Wat eten we vandaag?</h2>
-      <p>Elke dag een nieuw gerecht op de muur. Lekker, handig en zorgt voor culinaire inspiratie door het jaar heen.</p>
-    </div>
-
-    <div class="gift">
-      <img src="trimmer.jpg" alt="Neustrimmer">
+      <img src="https://media.s-bol.com/qNqKJ0lmJ6L/550x773.jpg" alt="Neustrimmer Wellshave">
       <h2>Wellshave 2-in-1 Neustrimmer</h2>
-      <p>Handige premium trimmer voor neus, wenkbrauwen en oorhaar. Stoer, praktisch en altijd scherp voor de dag komen.</p>
+      <p>Altijd scherp voor de dag — een premium trimmer voor neus, oor en wenkbrauw. Compact, krachtig en stoer verpakt.</p>
       <a href="https://www.bol.com/nl/nl/p/wellshave-2-in-1-neustrimmer-premium-wenkbrauw-en-oorhaar-trimmer-neushaartrimmer-voor-mannen/9300000141590370/" target="_blank">
         Bekijk cadeau <i class="fa-solid fa-arrow-up-right-from-square"></i>
       </a>
     </div>
 
+    <!-- Cadeau 2 -->
     <div class="gift">
-      <img src="riem.jpg" alt="Leren riem">
+      <img src="recept kalender.JPG" alt="Wat eten we vandaag kalender">
+      <h2>Kookkalender – Wat eten we vandaag?</h2>
+      <p>Elke dag een heerlijk recept! Perfect voor wie van lekker eten houdt maar niet elke dag wil nadenken over het menu.</p>
+    </div>
+
+    <!-- Cadeau 3 -->
+    <div class="gift">
+      <img src="https://media.s-bol.com/J2PM1gGZQ7Yx/550x552.jpg" alt="Leren herenriem">
       <h2>YYCHAN Leren Herenriem</h2>
-      <p>Stijlvolle, stevige leren riem met automatische gesp. Tijdloos design voor elke outfit – een echte klassieker.</p>
+      <p>Stijlvolle riem van echt leer met automatische gesp. Past bij elke outfit — stoer, tijdloos en praktisch.</p>
       <a href="https://www.bol.com/nl/nl/p/yychan-riem-heren-koe-leer-riem-automatische-gesp-inkortbaar-cadeau-man-cadeau-mannen-verjaardag-zwart-120cm/9300000188076153/" target="_blank">
         Bekijk cadeau <i class="fa-solid fa-arrow-up-right-from-square"></i>
       </a>
     </div>
 
+    <!-- Cadeau 4 -->
     <div class="gift">
-      <img src="worst.jpg" alt="Droge worst">
-      <h2>Droge Drentse Worst met Venkel</h2>
-      <p>Eerlijk en hartig — een lekkere droge worst met een vleugje venkel (maar géén kruidnagel!). Perfect voor onderweg of bij een stevige wandeling.</p>
+      <img src="worst.jpg" alt="Droge Drentse worst">
+      <h2>Droge Drentse Worst</h2>
+      <p>Eerlijk en hartig — een lekkere droge worst met een vleugje venkel (maar zonder kruidnagel!). Perfect voor onderweg of bij een stevige wandeling.</p>
       <a href="https://www.ekoplaza.nl/nl/producten/product/droge-worst-wild-zwijn-venkel-0001160767" target="_blank">
         Bekijk cadeau <i class="fa-solid fa-arrow-up-right-from-square"></i>
       </a>
     </div>
 
+    <!-- Cadeau 5 -->
     <div class="gift">
       <img src="sokken.jpg" alt="Bamboe sokken">
-      <h2>Bamigo Bamboe Sokken (maat 43-46)</h2>
-      <p>Zachte, ademende sokken van bamboe. Comfortabel bij elke stap – perfect voor dagelijks gebruik of wandeltochten.</p>
+      <h2>Bamigo Bamboe Sokken</h2>
+      <p>Zachte, ademende sokken van bamboe. Comfortabel bij elke stap — ideaal voor dagelijks gebruik of wandeltochten.</p>
       <a href="https://bamigo.com/nl/heren/bamboe-sokken/43-46" target="_blank">
         Bekijk cadeau <i class="fa-solid fa-arrow-up-right-from-square"></i>
       </a>
@@ -175,14 +170,11 @@
 
   </main>
 
-  <section id="over-sven">
-    <h2>Over Sven</h2>
-    <p>🏔️ Bergwandelaar in hart en nieren, 🍝 liefhebber van goed eten en ☕ geniet van een sterk bakkie koffie na een lange wandeling.  
-    Met 57 jaar ervaring in het leven weet hij precies wat stoer, nuchter en smaakvol is — en dat zie je terug in zijn verlanglijst.</p>
-  </section>
+  <footer>
+    © 2025 Sven’s Verlanglijst — gemaakt met 💪 en een vleugje honger
+  </footer>
 
   <script>
-    // Countdown klok naar Sven's verjaardag
     const birthday = new Date("2025-10-19T00:00:00").getTime();
     const countdownEl = document.getElementById("countdown");
 
@@ -191,7 +183,7 @@
       const diff = birthday - now;
 
       if (diff <= 0) {
-        countdownEl.innerHTML = "🎂 Het is feest! Gefeliciteerd Sven! 🎉";
+        countdownEl.innerHTML = "🎂 Het is feest, Sven is 57! 🥳";
         return;
       }
 
@@ -208,3 +200,4 @@
   </script>
 </body>
 </html>
+
