@@ -2,12 +2,12 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sven's Verlanglijst – 57 jaar</title>
+  <title>Verlanglijst Sven – 57 jaar</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      background: linear-gradient(180deg, #0c0c0c, #141414);
+      background: #0d0d0d url('https://www.transparenttextures.com/patterns/leather.png') repeat;
       color: #f5f5f5;
       font-family: 'Montserrat', sans-serif;
       margin: 0;
@@ -15,109 +15,72 @@
       text-align: center;
     }
 
-    /* HEADER FOTO */
     header {
-      position: relative;
-      color: #fff;
+      background: linear-gradient(135deg, #111, #222);
+      padding: 2rem 1rem;
+      box-shadow: 0 0 25px rgba(0,0,0,0.7);
+      border-bottom: 2px solid #ff4500;
     }
-    header img {
-      width: 100%;
-      max-height: 400px;
-      object-fit: cover;
-      opacity: 0.95;
-    }
-    header h1 {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
+
+    h1 {
       font-size: 2.5rem;
       color: #ff4500;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 0.5rem 1rem;
-      border-radius: 10px;
-      text-shadow: 0 0 8px #000;
+      margin: 0;
     }
 
-    /* OVER SVEN */
-    .about {
-      background: #1a1a1a;
-      margin: 0 auto;
-      padding: 2rem 1rem;
-      max-width: 800px;
-      border-radius: 16px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.6);
-      margin-top: -2rem;
-      position: relative;
-      z-index: 5;
-    }
-    .about h2 {
-      color: #ff4500;
-      font-size: 1.8rem;
-      margin-bottom: 0.5rem;
-    }
-    .about p {
-      color: #ccc;
-      font-size: 1rem;
-      line-height: 1.6;
-      max-width: 600px;
-      margin: 0.5rem auto 0;
-    }
-    .about i {
-      color: #00ffc3;
-      margin: 0 0.4rem;
-    }
-
-    /* COUNTDOWN */
     #countdown {
-      font-size: 2.2rem;
+      font-size: 1.8rem;
+      color: #00ffcc;
+      margin-top: 1rem;
       font-weight: bold;
-      color: #00ffc3;
-      background: #1a1a1a;
-      display: inline-block;
-      padding: 0.7rem 1.2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 12px rgba(0,255,200,0.4);
-      margin: 2rem auto 1rem;
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px #00ffcc;
     }
 
-    /* GIFTS */
     .gift-container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1.5rem;
-      padding: 2rem 1rem;
+      gap: 2rem;
+      padding: 2rem;
       max-width: 1200px;
       margin: auto;
     }
+
     .gift {
-      background: #1a1a1a;
-      border-radius: 16px;
+      background: rgba(26, 26, 26, 0.95);
+      border-radius: 15px;
       padding: 1rem;
       box-shadow: 0 0 15px rgba(0,0,0,0.6);
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: transform 0.3s, box-shadow 0.3s;
+      border: 1px solid #333;
     }
+
     .gift:hover {
-      transform: scale(1.03);
-      box-shadow: 0 0 20px rgba(255,69,0,0.4);
+      transform: scale(1.04);
+      box-shadow: 0 0 25px rgba(255,69,0,0.4);
     }
+
     .gift img {
       width: 100%;
-      border-radius: 12px;
+      height: auto;
+      border-radius: 10px;
       margin-bottom: 1rem;
     }
+
     .gift h2 {
       color: #ff4500;
-      font-size: 1.3rem;
-      margin-bottom: 0.5rem;
+      font-size: 1.4rem;
+      margin: 0.5rem 0;
     }
+
     .gift p {
-      color: #ccc;
       font-size: 1rem;
-      line-height: 1.4;
+      color: #ccc;
       margin-bottom: 1rem;
     }
+
     .gift a {
+      display: inline-block;
       background: #ff4500;
       color: #fff;
       padding: 0.7rem 1.2rem;
@@ -126,89 +89,100 @@
       font-weight: bold;
       transition: background 0.2s;
     }
+
     .gift a:hover {
       background: #e63e00;
     }
 
-    footer {
-      padding: 1rem;
-      color: #777;
-      font-size: 0.9rem;
-      margin-top: 2rem;
+    section#over-sven {
+      max-width: 800px;
+      margin: 2rem auto;
+      background: rgba(17, 17, 17, 0.95);
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: 0 0 15px rgba(0,0,0,0.6);
+      border: 1px solid #333;
     }
 
-    /* RESPONSIVE */
+    section#over-sven h2 {
+      color: #ff4500;
+      font-size: 1.8rem;
+    }
+
+    section#over-sven p {
+      font-size: 1.1rem;
+      color: #ddd;
+      line-height: 1.5;
+    }
+
     @media (max-width: 600px) {
-      header h1 { font-size: 1.6rem; bottom: 10px; }
-      #countdown { font-size: 1.5rem; padding: 0.4rem 0.8rem; }
-      .about p { font-size: 0.95rem; }
+      h1 { font-size: 2rem; }
+      #countdown { font-size: 1.4rem; }
+      .gift h2 { font-size: 1.2rem; }
+      section#over-sven p { font-size: 1rem; }
     }
   </style>
 </head>
 <body>
   <header>
-    <img src="sven%20steen%20montblanc.JPG" alt="Sven in de bergen">
-    <h1>🎉 Sven's Verlanglijst – 57 jaar 🎂</h1>
+    <h1>🎉 Sven wordt 57! 🎂</h1>
+    <div id="countdown"></div>
   </header>
-
-  <section class="about">
-    <h2>Over Sven</h2>
-    <p>
-      <i class="fa-solid fa-mountain"></i> Bergwandelaar in hart en nieren,
-      <i class="fa-solid fa-utensils"></i> liefhebber van goed eten en
-      <i class="fa-solid fa-mug-saucer"></i> geniet van een sterk bakkie koffie na een lange wandeling.
-      Met 57 jaar ervaring in het leven weet hij precies wat stoer, nuchter en smaakvol is.
-    </p>
-  </section>
-
-  <div id="countdown"></div>
 
   <main class="gift-container">
 
-    <!-- Cadeau 1 -->
     <div class="gift">
-      <img src="https://media.s-bol.com/qNqKJ0lmJ6L/550x773.jpg" alt="Neustrimmer Wellshave">
+      <img src="recept kalender.jpg" alt="Recept kalender">
+      <h2>Recept Kalender – Wat eten we vandaag?</h2>
+      <p>Elke dag een nieuw gerecht op de muur. Lekker, handig en zorgt voor culinaire inspiratie door het jaar heen.</p>
+    </div>
+
+    <div class="gift">
+      <img src="trimmer.jpg" alt="Neustrimmer">
       <h2>Wellshave 2-in-1 Neustrimmer</h2>
-      <p>Altijd scherp voor de dag — een premium trimmer voor neus, oor en wenkbrauw. Compact, krachtig en stoer verpakt.</p>
-      <a href="https://www.bol.com/nl/nl/p/wellshave-2-in-1-neustrimmer-premium-wenkbrauw-en-oorhaar-trimmer-neushaartrimmer-voor-mannen/9300000141590370/" target="_blank" rel="noopener">
+      <p>Handige premium trimmer voor neus, wenkbrauwen en oorhaar. Stoer, praktisch en altijd scherp voor de dag komen.</p>
+      <a href="https://www.bol.com/nl/nl/p/wellshave-2-in-1-neustrimmer-premium-wenkbrauw-en-oorhaar-trimmer-neushaartrimmer-voor-mannen/9300000141590370/" target="_blank">
         Bekijk cadeau <i class="fa-solid fa-arrow-up-right-from-square"></i>
       </a>
     </div>
 
-    <!-- Cadeau 2 -->
     <div class="gift">
-      <img src="recept%20kalender.JPG" alt="Wat eten we vandaag kalender">
-      <h2>Kookkalender – Wat eten we vandaag?</h2>
-      <p>Elke dag een heerlijk recept! Perfect voor wie van lekker eten houdt maar niet elke dag wil nadenken over het menu.</p>
-    </div>
-
-    <!-- Cadeau 3 -->
-    <div class="gift">
-      <img src="https://media.s-bol.com/J2PM1gGZQ7Yx/550x552.jpg" alt="Leren herenriem">
+      <img src="riem.jpg" alt="Leren riem">
       <h2>YYCHAN Leren Herenriem</h2>
-      <p>Stijlvolle riem van echt leer met automatische gesp. Past bij elke outfit — stoer, tijdloos en praktisch.</p>
-      <a href="https://www.bol.com/nl/nl/p/yychan-riem-heren-koe-leer-riem-automatische-gesp-inkortbaar-cadeau-man-cadeau-mannen-verjaardag-zwart-120cm/9300000188076153/" target="_blank" rel="noopener">
+      <p>Stijlvolle, stevige leren riem met automatische gesp. Tijdloos design voor elke outfit – een echte klassieker.</p>
+      <a href="https://www.bol.com/nl/nl/p/yychan-riem-heren-koe-leer-riem-automatische-gesp-inkortbaar-cadeau-man-cadeau-mannen-verjaardag-zwart-120cm/9300000188076153/" target="_blank">
         Bekijk cadeau <i class="fa-solid fa-arrow-up-right-from-square"></i>
       </a>
     </div>
 
-    <!-- Cadeau 4 -->
     <div class="gift">
-      <img src="https://www.ekoplaza.nl/globalassets/producten/0001160767.jpg" alt="Droge Drentse worst">
+      <img src="worst.jpg" alt="Droge worst">
       <h2>Droge Drentse Worst met Venkel</h2>
-      <p>Eerlijk en hartig — een lekkere droge worst met een vleugje venkel (maar géén kruidnagel!). Perfect voor onderweg of bij een stevige wandeling in de natuur.</p>
-      <a href="https://www.ekoplaza.nl/nl/producten/product/droge-worst-wild-zwijn-venkel-0001160767" target="_blank" rel="noopener">
+      <p>Eerlijk en hartig — een lekkere droge worst met een vleugje venkel (maar géén kruidnagel!). Perfect voor onderweg of bij een stevige wandeling.</p>
+      <a href="https://www.ekoplaza.nl/nl/producten/product/droge-worst-wild-zwijn-venkel-0001160767" target="_blank">
+        Bekijk cadeau <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </a>
+    </div>
+
+    <div class="gift">
+      <img src="sokken.jpg" alt="Bamboe sokken">
+      <h2>Bamigo Bamboe Sokken (maat 43-46)</h2>
+      <p>Zachte, ademende sokken van bamboe. Comfortabel bij elke stap – perfect voor dagelijks gebruik of wandeltochten.</p>
+      <a href="https://bamigo.com/nl/heren/bamboe-sokken/43-46" target="_blank">
         Bekijk cadeau <i class="fa-solid fa-arrow-up-right-from-square"></i>
       </a>
     </div>
 
   </main>
 
-  <footer>
-    © 2025 Sven’s Verlanglijst — gemaakt met 💪 en een vleugje berglucht
-  </footer>
+  <section id="over-sven">
+    <h2>Over Sven</h2>
+    <p>🏔️ Bergwandelaar in hart en nieren, 🍝 liefhebber van goed eten en ☕ geniet van een sterk bakkie koffie na een lange wandeling.  
+    Met 57 jaar ervaring in het leven weet hij precies wat stoer, nuchter en smaakvol is — en dat zie je terug in zijn verlanglijst.</p>
+  </section>
 
   <script>
+    // Countdown klok naar Sven's verjaardag
     const birthday = new Date("2025-10-19T00:00:00").getTime();
     const countdownEl = document.getElementById("countdown");
 
@@ -217,7 +191,7 @@
       const diff = birthday - now;
 
       if (diff <= 0) {
-        countdownEl.innerHTML = "🎂 Het is feest! Sven is 57! 🥳";
+        countdownEl.innerHTML = "🎂 Het is feest! Gefeliciteerd Sven! 🎉";
         return;
       }
 
@@ -234,4 +208,3 @@
   </script>
 </body>
 </html>
-
