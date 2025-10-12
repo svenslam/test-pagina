@@ -181,7 +181,28 @@
     © 2025 Sven’s Verlanglijst — gemaakt met 💪 en een vleugje honger
   </footer>
 
+  <!-- Achtergrondmuziek -->
+  <audio id="bgmusic" src="muziek.m4a" loop muted></audio>
+
   <script>
+    const music = document.getElementById("bgmusic");
+
+    // Probeer automatisch te starten
+    window.addEventListener("load", () => {
+      music.play().catch(() => {
+        console.log("Autoplay geblokkeerd, wacht op klik.");
+      });
+    });
+
+    // Zet geluid aan bij eerste klik
+    document.addEventListener("click", () => {
+      if (music.muted) {
+        music.muted = false;
+        music.play();
+      }
+    });
+
+    // Countdown
     const birthday = new Date("2025-10-19T12:00:00").getTime();
     const countdownEl = document.getElementById("countdown");
 
